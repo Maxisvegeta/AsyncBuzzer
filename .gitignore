@@ -1,0 +1,9 @@
+.pio
+.pioenvs/
+.piolibdeps/
+.sconsign.dblite
+clang-*
+pre-commit-*
+*.o
+*.a
+*.elf

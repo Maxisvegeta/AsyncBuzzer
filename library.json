@@ -1,0 +1,11 @@
+{
+    "name": "AsyncBuzzer",
+    "version": "1.0.0",
+    "description": "Asynchronous buzzer library for ESP32 using FreeRTOS task and LEDC",
+    "keywords": ["buzzer", "esp32", "async", "ledc", "freertos"],
+    "authors": {
+        "name": "maxBuzzer"
+    },
+    "frameworks": ["arduino"],
+    "platforms": ["espressif32"]
+}
