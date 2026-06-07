@@ -14,10 +14,11 @@ public:
     void begin(uint8_t pin);
     void end();
 
-    void beep(uint16_t freq, uint32_t durationMs);
+    void beep(uint16_t freq, uint32_t durationMs, bool force = true);
     void beep(uint16_t freq, uint32_t onMs, uint32_t offMs,
-              uint16_t beeps, uint32_t pauseMs, uint8_t cycles);
-    void playMelody(const char* melodyStr);
+              uint16_t beeps, uint32_t pauseMs, uint8_t cycles,
+              bool force = true);
+    void playMelody(const char* melodyStr, bool force = true);
     void stop();
     bool isPlaying();
 

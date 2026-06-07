@@ -41,8 +41,9 @@ void AsyncBuzzer::end() {
     ledcWrite(ledcChannel, 0);
 }
 
-void AsyncBuzzer::beep(uint16_t freq, uint32_t durationMs) {
+void AsyncBuzzer::beep(uint16_t freq, uint32_t durationMs, bool force) {
     if (!queue) return;
+    if (!force && (playing || uxQueueMessagesWaiting(queue) > 0)) return;
     QueueItem item = { CMD_BEEP };
     item.freq = freq;
     item.durationMs = durationMs;
@@ -50,8 +51,10 @@ void AsyncBuzzer::beep(uint16_t freq, uint32_t durationMs) {
 }
 
 void AsyncBuzzer::beep(uint16_t freq, uint32_t onMs, uint32_t offMs,
-                        uint16_t beeps, uint32_t pauseMs, uint8_t cycles) {
+                        uint16_t beeps, uint32_t pauseMs, uint8_t cycles,
+                        bool force) {
     if (!queue) return;
+    if (!force && (playing || uxQueueMessagesWaiting(queue) > 0)) return;
     QueueItem item = { CMD_BEEP_PATTERN };
     item.freq = freq;
     item.durationMs = onMs;
@@ -62,8 +65,9 @@ void AsyncBuzzer::beep(uint16_t freq, uint32_t onMs, uint32_t offMs,
     xQueueOverwrite(queue, &item);
 }
 
-void AsyncBuzzer::playMelody(const char* melodyStr) {
+void AsyncBuzzer::playMelody(const char* melodyStr, bool force) {
     if (!queue || !melodyStr) return;
+    if (!force && (playing || uxQueueMessagesWaiting(queue) > 0)) return;
     QueueItem item = { CMD_MELODY };
     strncpy(item.melody, melodyStr, sizeof(item.melody) - 1);
     item.melody[sizeof(item.melody) - 1] = '\0';
