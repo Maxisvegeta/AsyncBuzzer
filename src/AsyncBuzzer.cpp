@@ -1,5 +1,7 @@
 #include "AsyncBuzzer.h"
 
+#define QUEUE_DEPTH 4
+
 AsyncBuzzer::AsyncBuzzer(uint8_t ledcChannel, uint8_t resolution)
     : pin(0), ledcChannel(ledcChannel), resolution(resolution),
       volume(128), playing(false), onCompleteCb(nullptr),
@@ -16,7 +18,7 @@ void AsyncBuzzer::begin(uint8_t pin) {
     ledcAttachPin(pin, ledcChannel);
     ledcWrite(ledcChannel, 0);
 
-    queue = xQueueCreate(1, sizeof(QueueItem));
+    queue = xQueueCreate(QUEUE_DEPTH, sizeof(QueueItem));
     if (!queue) return;
 
 #if CONFIG_FREERTOS_UNICORE
@@ -29,7 +31,7 @@ void AsyncBuzzer::begin(uint8_t pin) {
 void AsyncBuzzer::end() {
     if (taskHandle) {
         QueueItem item = { CMD_EXIT };
-        xQueueOverwrite(queue, &item);
+        send(item, true);
         vTaskDelay(pdMS_TO_TICKS(20));
         taskHandle = nullptr;
     }
@@ -41,20 +43,22 @@ void AsyncBuzzer::end() {
     ledcWrite(ledcChannel, 0);
 }
 
-void AsyncBuzzer::beep(uint16_t freq, uint32_t durationMs, bool force) {
+void AsyncBuzzer::send(const QueueItem& item, bool force) {
     if (!queue) return;
-    if (!force && (playing || uxQueueMessagesWaiting(queue) > 0)) return;
+    if (force) xQueueReset(queue);
+    xQueueSend(queue, &item, 0);
+}
+
+void AsyncBuzzer::beep(uint16_t freq, uint32_t durationMs, bool force) {
     QueueItem item = { CMD_BEEP };
     item.freq = freq;
     item.durationMs = durationMs;
-    xQueueOverwrite(queue, &item);
+    send(item, force);
 }
 
 void AsyncBuzzer::beep(uint16_t freq, uint32_t onMs, uint32_t offMs,
                         uint16_t beeps, uint32_t pauseMs, uint8_t cycles,
                         bool force) {
-    if (!queue) return;
-    if (!force && (playing || uxQueueMessagesWaiting(queue) > 0)) return;
     QueueItem item = { CMD_BEEP_PATTERN };
     item.freq = freq;
     item.durationMs = onMs;
@@ -62,22 +66,20 @@ void AsyncBuzzer::beep(uint16_t freq, uint32_t onMs, uint32_t offMs,
     item.beeps = beeps;
     item.pauseMs = pauseMs;
     item.cycles = cycles;
-    xQueueOverwrite(queue, &item);
+    send(item, force);
 }
 
 void AsyncBuzzer::playMelody(const char* melodyStr, bool force) {
-    if (!queue || !melodyStr) return;
-    if (!force && (playing || uxQueueMessagesWaiting(queue) > 0)) return;
+    if (!melodyStr) return;
     QueueItem item = { CMD_MELODY };
     strncpy(item.melody, melodyStr, sizeof(item.melody) - 1);
     item.melody[sizeof(item.melody) - 1] = '\0';
-    xQueueOverwrite(queue, &item);
+    send(item, force);
 }
 
 void AsyncBuzzer::stop() {
-    if (!queue) return;
     QueueItem item = { CMD_STOP };
-    xQueueOverwrite(queue, &item);
+    send(item, true);  // siempre interrumpe
 }
 
 bool AsyncBuzzer::isPlaying() {

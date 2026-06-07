@@ -14,11 +14,11 @@ public:
     void begin(uint8_t pin);
     void end();
 
-    void beep(uint16_t freq, uint32_t durationMs, bool force = true);
+    void beep(uint16_t freq, uint32_t durationMs, bool force = false);
     void beep(uint16_t freq, uint32_t onMs, uint32_t offMs,
               uint16_t beeps, uint32_t pauseMs, uint8_t cycles,
-              bool force = true);
-    void playMelody(const char* melodyStr, bool force = true);
+              bool force = false);
+    void playMelody(const char* melodyStr, bool force = false);
     void stop();
     bool isPlaying();
 
@@ -57,6 +57,7 @@ private:
     TaskHandle_t taskHandle;
 
     static void taskFunc(void* pv);
+    void send(const QueueItem& item, bool force);
     void processItem(const QueueItem& item);
     void playTone(uint16_t freq, uint32_t durationMs);
     bool checkNewCommand();
