@@ -4,7 +4,7 @@
 
 AsyncBuzzer::AsyncBuzzer(uint8_t ledcChannel, uint8_t resolution)
     : pin(0), ledcChannel(ledcChannel), resolution(resolution),
-      volume(128), playing(false), onCompleteCb(nullptr),
+      volume(255), playing(false), onCompleteCb(nullptr),
       queue(nullptr), taskHandle(nullptr) {}
 
 AsyncBuzzer::~AsyncBuzzer() {
@@ -173,7 +173,7 @@ bool AsyncBuzzer::checkNewCommand() {
 void AsyncBuzzer::playTone(uint16_t freq, uint32_t durationMs) {
     if (freq > 0) {
         ledcSetup(ledcChannel, freq, resolution);
-        ledcWrite(ledcChannel, volume);
+        ledcWrite(ledcChannel, (volume + 1) >> 1);
     }
     if (durationMs > 0) {
         vTaskDelay(pdMS_TO_TICKS(durationMs));
