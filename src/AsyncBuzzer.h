@@ -49,7 +49,7 @@ private:
     uint8_t pin;
     uint8_t ledcChannel;
     uint8_t resolution;
-    uint8_t volume;
+    uint8_t volume = 255;
     volatile bool playing;
     void (*onCompleteCb)();
 
